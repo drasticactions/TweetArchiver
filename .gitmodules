@@ -1,0 +1,3 @@
+[submodule "Scraping"]
+	path = Scraping
+	url = git@github.com:drasticactions/Shaman.Scraping.git
