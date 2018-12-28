@@ -38,7 +38,7 @@ namespace TweetArchiver
         static Tokens Tokens;
         static System.Threading.Timer t;
         static bool IsScrapping { get; set; } = false;
-        static List<Uri> CacheUrls = new List<Uri>();
+        static List<Uri> CacheUrls;
         static int Main(string[] args)
         {
             ConfigurationManager.Initialize(typeof(Program).GetTypeInfo().Assembly, IsDebug);
@@ -63,11 +63,13 @@ namespace TweetArchiver
 
         public static async Task MainAsync()
         {
+            CacheUrls = new List<Uri>();
             DB = new LiteDatabase("tweetarchive.db");
             var pin = GetPin();
             Tokens = await OAuth.GetTokensAsync(Session, pin);
             SetupScraper();
             int startin = 60 - DateTime.Now.Second;
+            Console.WriteLine("Starting Archiver...");
             t = new System.Threading.Timer(async o => await Scrape(),
                  null, startin * 1000, 60000);
             while (true)
@@ -108,18 +110,22 @@ namespace TweetArchiver
             }
             if (!IsScrapping)
             {
-                Debug.WriteLine("Started Scraping");
-                foreach(var url in CacheUrls)
-                    Scraper.AddToCrawl(url);
+                Console.WriteLine("Started Scraping");
+                var newUrlList = new List<Uri>(CacheUrls);
                 CacheUrls = new List<Uri>();
+                foreach (var url in newUrlList)
+                {
+                    Console.WriteLine(url);
+                    Scraper.AddToCrawl(url);
+                }
                 IsScrapping = true;
                 await Scraper.ScrapeAsync();
                 IsScrapping = false;
-                Debug.WriteLine("Ended Scraping");
+                Console.WriteLine("Ended Scraping");
             }
             else
             {
-                Debug.WriteLine("Already Scraping");
+                Console.WriteLine("Already Scraping");
             }
         }
 
