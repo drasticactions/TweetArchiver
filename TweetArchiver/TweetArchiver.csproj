@@ -95,10 +95,16 @@
     <None Include="Shaman.Scraping\curl-ca-bundle.crt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="tokens.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CoreTweet">
       <Version>1.0.0.483</Version>
+    </PackageReference>
+    <PackageReference Include="Costura.Fody">
+      <Version>3.2.1</Version>
     </PackageReference>
     <PackageReference Include="LiteDB">
       <Version>4.1.4</Version>

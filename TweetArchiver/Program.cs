@@ -37,6 +37,8 @@ namespace TweetArchiver
         static OAuth.OAuthSession Session;
         static Tokens Tokens;
         static System.Threading.Timer t;
+        static bool IsScrapping { get; set; } = false;
+        static List<Uri> CacheUrls = new List<Uri>();
         static int Main(string[] args)
         {
             ConfigurationManager.Initialize(typeof(Program).GetTypeInfo().Assembly, IsDebug);
@@ -68,7 +70,7 @@ namespace TweetArchiver
             int startin = 60 - DateTime.Now.Second;
             t = new System.Threading.Timer(async o => await Scrape(),
                  null, startin * 1000, 60000);
-            while(true)
+            while (true)
             {
                 // Kill the program to exit
             }
@@ -96,14 +98,29 @@ namespace TweetArchiver
                 }
                 Debug.WriteLine($"Adding {mention.Id}");
                 var replyUrl = $"https://twitter.com/{mention.User.ScreenName}/status/{mention.Id}";
-                Scraper.AddToCrawl(new Uri(replyUrl));
+                Console.WriteLine($"Adding: @{mention.User.ScreenName} - {mention.Text}");
+                CacheUrls.Add(new Uri(replyUrl));
                 tweets.Insert(new ArchiveTweet() { Id = mention.Id,
                     InReplyToStatusId = mention.InReplyToStatusId.HasValue ? mention.InReplyToStatusId.Value : 0,
                     ScreenName = mention.User.ScreenName,
                     Text = mention.Text
                 });
             }
-            await Scraper.ScrapeAsync();
+            if (!IsScrapping)
+            {
+                Debug.WriteLine("Started Scraping");
+                foreach(var url in CacheUrls)
+                    Scraper.AddToCrawl(url);
+                CacheUrls = new List<Uri>();
+                IsScrapping = true;
+                await Scraper.ScrapeAsync();
+                IsScrapping = false;
+                Debug.WriteLine("Ended Scraping");
+            }
+            else
+            {
+                Debug.WriteLine("Already Scraping");
+            }
         }
 
         public static string GetPin()
